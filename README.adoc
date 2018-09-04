@@ -28,27 +28,26 @@ eval $(minishift docker-env) && eval $(minishift oc-env)
 
 [source,bash]
 ----
-minishift openshift config set --patch \
-'{ \
-    "admissionConfig": { \
-       "pluginConfig": { \
-          "ValidatingAdmissionWebhook": { \
-             "configuration": { \
-                "apiVersion": "v1", \
-                "kind": "DefaultAdmissionConfig", \
-                "disable": false \
-              } \
-            }, \
-            "MutatingAdmissionWebhook": { \
-              "configuration": { \
-                 "apiVersion": "v1", \
-                 "kind": "DefaultAdmissionConfig", \
-                 "disable": false \
-              } \
-            } \
-        } \
-    } \
-}'
+$minishift ssh 
+$ cp /var/lib/minishift/base/kube-apiserver/master-config.yaml /var/lib/minishift/base/kube-apiserver/master-config.yaml.old0
+$ sed -i -e 's/"admissionConfig":{"pluginConfig":null}/"admissionConfig": {\
+    "pluginConfig": {\
+        "ValidatingAdmissionWebhook": {\
+            "configuration": {\
+                "apiVersion": "v1",\
+                "kind": "DefaultAdmissionConfig",\
+                "disable": false\
+            }\
+        },\
+        "MutatingAdmissionWebhook": {\
+            "configuration": {\
+                "apiVersion": "v1",\
+                "kind": "DefaultAdmissionConfig",\
+                "disable": false\
+            }\
+        }\
+    }\
+}/' /var/lib/minishift/base/kube-apiserver/master-config.yaml
 ----
 
 minishift openshift config view
