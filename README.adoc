@@ -28,7 +28,7 @@ eval $(minishift docker-env) && eval $(minishift oc-env)
 
 [source,bash]
 ----
-$minishift ssh 
+$ minishift ssh 
 $ cp /var/lib/minishift/base/kube-apiserver/master-config.yaml /var/lib/minishift/base/kube-apiserver/master-config.yaml.old0
 $ sed -i -e 's/"admissionConfig":{"pluginConfig":null}/"admissionConfig": {\
     "pluginConfig": {\
@@ -120,6 +120,8 @@ oc adm policy add-cluster-role-to-user cluster-admin -z controller -n knative-se
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-lite.yaml \
   | sed 's/LoadBalancer/NodePort/' \
   | oc apply -f -
+
+oc get pods -n knative-serving -w
 ----
 
 == Troubleshooting
