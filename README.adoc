@@ -90,14 +90,28 @@ You can clone the repository from https://github.com/redhat-developers-demo/knat
 ----
 cd $PROJECT_HOME
 bin/istio_openshift_policies.sh  # <1>
-curl -L https://raw.githubusercontent.com/knative/serving/v0.1.1/third_party/istio-0.8.0/istio.yaml \
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+  | oc apply -f -
 ----
 
 <1> This will setup the required OpenShift security policies that are required to deploy and make Istio functional
 
 Wait until all the pods on istio-system are up and running, you can verify it with the command `oc get pods -w -n istio-system`.
+
+[IMPORTANT]
+=====
+The Istio v1.0.1 release automatic sidecar injection has removed `privileged:true` from init contianers,this will cause the Pods with istio proxies automatic inject to crash. Run the following command to update the **istio-sidecar-injector** configmap
+
+[sources,bash]
+----
+#/bin/bash
+
+$ oc get cm istio-sidecar-injector -n istio-system -oyaml | sed -e 's/securityContext:/securityContext:\\n      privileged: true/' | oc replace -f -
+----
+
+Please run this command only once to avoid multiple additions
+=====
 
 ==== Knative Serving
 
@@ -112,9 +126,9 @@ Assuming you are in $PROJECT_HOME,
 bin/knative_openshift_policies.sh # <1>
 
 # Knative serving 
-curl -L https://github.com/knative/serving/releases/download/v0.1.1/release-lite.yaml \
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-lite.yaml \
   | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+  | oc apply -f -
 ----
 
 <1> This will setup the required OpenShift security policies that are required to deploy and make Knative functional
