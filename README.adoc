@@ -8,5 +8,5 @@ Table of Contents
 
 * link:./1.InstallKnativeOnMinishift.adoc[Install Knative on Minishift]
 * link:./3.BluegreenDeployment.adoc[Blue Green Deployments]
-* Autoscaling
+* link:./4.Autoscaling.adoc[Autoscaling]
 * Build
