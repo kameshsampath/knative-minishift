@@ -137,12 +137,12 @@ Wait until all the pods in the knative-serving are up and running, you can verif
 
 == Testing Deployment 
 
-Lets now dpeloy an simple node.js application to make sure our deployment works,
+Lets now deploy an simple node.js application to make sure our deployment works,
 
 [sources,bash]
 -----
 
-cd test/kelloworld-nodejs
+cd apps/kelloworld-nodejs
 
 docker build -t dev.local/kelloworld:0.0.1 --rm .
 

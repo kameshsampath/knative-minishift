@@ -1,0 +1,10 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Route
+metadata:
+  name: kelloworld
+spec:
+   traffic:
+   - revisionName: kelloworld-00001
+     percent: 50
+   - revisionName: kelloworld-00002
+     percent: 50
