@@ -1,10 +1,11 @@
-Knative on Minishift
---------------------
+= Knative on minishift 
 
-This is a tutorial to learn Knative on Minishift.
+A derivative of official instructions of https://github.com/knative/docs/blob/master/install/Knative-with-OpenShift.md[Knative on OpenShift], which details on how to deploy https://cloud.google.com/knative/[Knative] on https://github.com/minishift/minishift[minishift].
 
-Table of Contents
-~~~~~~~~~~~~~~~~~
+[NOTE]
+====
+https://cloud.google.com/knative/[Knative] requires OpenShift 3.10.0 or above, hence its recommended to install latest https://github.com/minishift/minishift[minishift].
+====
 
 == minishift setup
 
@@ -74,7 +75,7 @@ oc project myproject
 oc adm policy add-scc-to-user privileged -z default
 # Automatic Istio sidecar injection
 oc label namespace myproject istio-injection=enabled
-kubectl get namespace --show-labels  #<1>
+oc get namespace --show-labels  #<1>
 ----
 
 <1> This should show the **myproject** namespace with **istio-injection=enabled** label
@@ -91,7 +92,7 @@ cd $PROJECT_HOME
 bin/istio_openshift_policies.sh  # <1>
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+  | oc apply -f -
 ----
 
 <1> This will setup the required OpenShift security policies that are required to deploy and make Istio functional
@@ -106,7 +107,7 @@ The Istio v1.0.1 release automatic sidecar injection has removed `privileged:tru
 ----
 #/bin/bash
 
-$ kubectl get cm istio-sidecar-injector -n istio-system -oyaml | sed -e 's/securityContext:/securityContext:\\n      privileged: true/' | kubectl replace -f -
+$ oc get cm istio-sidecar-injector -n istio-system -oyaml | sed -e 's/securityContext:/securityContext:\\n      privileged: true/' | oc replace -f -
 ----
 
 Please run this command only once to avoid multiple additions
@@ -127,26 +128,25 @@ bin/knative_openshift_policies.sh # <1>
 # Knative serving 
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-lite.yaml \
   | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+  | oc apply -f -
 ----
 
 <1> This will setup the required OpenShift security policies that are required to deploy and make Knative functional
 
 Wait until all the pods in the knative-serving are up and running, you can verify it with the command `oc get pods -n knative-serving -w`.
 
-== App Deployment 
+== Testing Deployment 
 
-=== Service
-Lets now deploy an simple node.js application to make sure our deployment works,
+Lets now dpeloy an simple node.js application to make sure our deployment works,
 
 [sources,bash]
 -----
 
-cd apps/kelloworld-nodejs
+cd test/kelloworld-nodejs
 
 docker build -t dev.local/kelloworld:0.0.1 --rm .
 
-kubectl apply -f service.yaml
+oc apply -f service.yaml
 
 export IP_ADDRESS=$(oc get node -o 'jsonpath={.items[0].status.addresses[0].address}'):$(oc get svc knative-ingressgateway -n istio-system -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}')
 
@@ -161,93 +161,12 @@ NOTE: There is also utility script called `call.sh` inside $PROJECT_HOME/bin whi
 
 If you'd like to view the available sample apps and deploy one of your choosing, head to the https://github.com/knative/docs/blob/master/serving/samples/README.md[sample apps] repo.
 
-=== Canary
-
-Cleanup all existing objects using the command:
-
-[sources,bash]
-----
-#!bin/bash
-kubectl delete all --all
-cd $PROJECT_HOME/apps/kelloworld-nodejs/routing
-kubectl apply -f app.yaml <1>
-----
-
-<1> In this case we will not use `service` object instead create the Knative serving objects individually.
-
-==== Create a new version of the app 
-
-Update the $PROJECT_HOME/apps/kelloworld-nodejs/app.js code to look like 
-
-[sources,JavaScript]
-----
-var express = require('express');
-var app = express();
-
-const asciiart = require("ascii-art");
-app.get("/", function (req, res, next) {
-  asciiart.font("Knative", "Doom", (rendered) => {
-    res.status(200).send(rendered);
-  });
-});
-
-app.listen(8080,function() {
-console.log("App started in port 8080");
-});
-----
-
-Build a new image using the following command,
-[sources,bash]
-----
-#!bin/bash
-docker build -t dev.local/kelloworld:0.0.2 --rm .
-----
-
-Update the application configuration to create new revision:
-
-[sources,bash]
-----
-#!bin/bash
-kubectl apply -f config-v2.yaml <1>
-----
-
-<1> This should create a new revision e.g. `kelloworld-00002` 
-
-Apply any one or more of the following routes to see the split of the traffic:
-
-- all-rev1.yaml        -- All traffic to revision kelloworld-00001
-- all-rev2.yaml        -- All traffic to revision kelloworld-00002
-- rev1-rev2_50-50.yaml -- Traffic split 50-50 between kelloworld-00001 and kelloworld-00002
-
-sources,bash]
-----
-#!bin/bash
-kubectl apply -f rev1-rev2_50-50.yaml 
-----
-
-
-[TIP]
-====
-Run the script $PROJECT_HOME/bin/poll.sh on a new terminal and you can see changes to the output while applying the routes
-====
-
 == Clean up
 
 [sources,bash]
 -----
-
-kubectl delete configurations.serving.knative.dev --all
-kubectl delete revisions.serving.knative.dev --all
-kubectl delete routes.serving.knative.dev --all
-kubectl delete services.serving.knative.dev --all
-
-(or)
-
-kubectl delete all --all
-
+oc delete configurations.serving.knative.dev --all
+oc delete revisions.serving.knative.dev --all
+oc delete routes.serving.knative.dev --all
+oc delete all --all
 -----
-=======
-* link:./1.InstallKnativeOnMinishift.adoc[Install Knative on Minishift]
-* link:./3.BluegreenDeployment.adoc[Blue Green Deployments]
-* link:./4.Autoscaling.adoc[Autoscaling]
-* link:./5.SourceToURL.adoc[Source2URL Build]
