@@ -1,1 +1,0 @@
-http://${IP_ADDRESS}?sleep=0&prime=0&bloat=0"
